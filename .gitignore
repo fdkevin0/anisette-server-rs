@@ -1,0 +1,5 @@
+/target/
+/assets/local/
+/data/
+*.tmp
+.DS_Store

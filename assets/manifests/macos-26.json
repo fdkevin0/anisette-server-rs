@@ -1,0 +1,19 @@
+{
+  "backend": "macos",
+  "description": "macOS 26.7.1 (25G241) x86_64 adid slice, build label from reference project",
+  "sha256": "4b6b320f08edcf5d65ed1141399b76a8d9323fee2045c577c5d2f30f35a5dae1",
+  "size_bytes": 3677696,
+  "guest_architecture": "x86_64",
+  "source": "https://sharebin.eu/files/CoreADI.x86_64",
+  "verification": {
+    "host": "macOS arm64",
+    "sha256": "passed",
+    "macho_parse": "passed: 5 segments, 131 bindings",
+    "emulator_boot": "passed: runloop and XPC IsMachineProvisioned(-2) returned false for fresh identity",
+    "provisioning": "passed against Apple for a fresh independent device; routing requires explicit Apple response value",
+    "otp": "passed locally, including two independent restores with stable MID; no Apple account acceptance test"
+  },
+  "source_reference": "https://github.com/malmeloo/Anisette.py/pull/6",
+  "download_method": "POST",
+  "source_description": "Backend author-provided reference binary; not an Apple-operated download host"
+}

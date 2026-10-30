@@ -1,0 +1,24 @@
+[package]
+name = "adi-windows"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license = "GPL-2.0-only"
+
+[lints]
+workspace = true
+
+[dependencies]
+anisette = { path = "../anisette" }
+goblin = "0.10"
+sha2 = "0.11"
+getrandom = "0.4"
+unicorn-engine = { version = "=2.1.5", default-features = false, features = ["arch_x86"] }
+
+base64.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,32 @@
+[package]
+name = "anisette-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license = "GPL-2.0-only"
+
+[lints]
+workspace = true
+
+[dependencies]
+clap.workspace = true
+anisette = { path = "../anisette" }
+adi-macos = { path = "../adi-macos" }
+adi-android = { path = "../adi-android" }
+adi-windows = { path = "../adi-windows" }
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body-util = "0.1"
+tokio-tungstenite = "0.30"
+futures-util = "0.3"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "signal", "time"] }
+base64.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+getrandom = "0.4"
+tempfile = "3"
+libc = "0.2"
+
+[dev-dependencies]
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "json", "rustls"] }

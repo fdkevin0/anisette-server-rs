@@ -1,0 +1,19 @@
+{
+  "backend": "android",
+  "application_version": "4.9.6.1447",
+  "source": "https://apps.mzstatic.com/content/android-apple-music-apk/applemusic.apk",
+  "apk_size": 142139820,
+  "apk_sha256": "9aab4e3bfd44b509dd657b030d46df536c5592512c256fc59012cce47a2e9c9c",
+  "guest_architecture": "arm64-v8a",
+  "files": {
+    "libstoreservicescore.so": {
+      "size": 2388480,
+      "sha256": "bd335e6963ba5ae2f5babca613435ad56d2660a9aee37df35f876c458d105ce4"
+    },
+    "libCoreADI.so": {
+      "size": 1792592,
+      "sha256": "9d5b557cf3faf88c34c394ab2cd7fc1a3b4acf3aed51f28cd0bc093858107c22"
+    }
+  },
+  "verification": "macOS arm64: real Apple provisioning, OTP, state restores, HTTP V1/restart, standard V3 handshake passed; account acceptance untested"
+}
