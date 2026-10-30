@@ -14,7 +14,7 @@ The memory allocator/runtime layout and daemon startup import models in `anisett
 
 `adi-macos/src/{filesystem,stubs,xpc}.rs` additionally adapt the same reference's `stubs.py` and `adi.py`, retaining GPL-2.0-only. Bounds, filesystem limits, input validation, error propagation and strict unsupported-operation handling are local changes.
 
-`adi-macos/src/adi.rs` adapts the same GPL-2.0-only ADI wire-operation reference. The service performs Apple provisioning through a separate system curl executable, using plist/time in Rust. The production HTTP service uses Hyper/Tokio/Tungstenite. The reqwest integration-test client and its TLS dependencies (including AWS-LC in reqwest 0.13) remain development-only; those test executables are not release artifacts. Build-only clang-sys is also recorded in docs/licenses.md. The importer enables only the required ZIP decoder.
+`adi-macos/src/adi.rs` adapts the same GPL-2.0-only ADI wire-operation reference. The service performs Apple provisioning with reqwest, rustls, and plist/time in Rust. The production HTTP service uses Hyper/Tokio/Tungstenite. Reqwest and its TLS dependencies (including AWS-LC in reqwest 0.13) are runtime dependencies as well as integration-test dependencies; their licenses are included in the inventory. Build-only clang-sys is also recorded in docs/licenses.md. The importer enables only the required ZIP decoder.
 
 ## Android and shared code
 
@@ -27,3 +27,7 @@ The lockfile includes target-specific, optional, build and example dependencies 
 ## Windows backend
 
 `adi-windows` uses locally authored PE loading and a bounded Win64 API subset, plus the GPL-2.0-only os-findmy-e dispatcher framing and shared allocator. Its full GPL-2.0-only license is retained. Apple DLL bytes are extracted from the official iTunes installer and bundled by the Docker build. No Wine, Perun, Blackwood or unlicensed apple-crates implementation code is included.
+
+## Apple public root certificate
+
+`crates/anisette/apple-root-ca.pem` is Apple's public Apple Root CA certificate, downloaded from Apple PKI for provisioning TLS verification. Source and fingerprint are recorded in [docs/upstream.md](docs/upstream.md). It is not an ADI executable or device credential.

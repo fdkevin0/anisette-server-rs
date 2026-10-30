@@ -15,8 +15,8 @@ struct Server {
     worker: Option<backend::V1Worker>,
 }
 impl Server {
-    fn start(binary: Arc<backend::Assets>, path: &std::path::Path, initialize: bool) -> Self {
-        let worker = backend::V1Worker::start(binary.clone(), path, initialize).unwrap();
+    fn start(binary: Arc<backend::Assets>, path: &std::path::Path) -> Self {
+        let worker = backend::V1Worker::start(binary.clone(), path).unwrap();
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();
         let url = format!("http://{}", listener.local_addr().unwrap());
@@ -125,7 +125,7 @@ fn run_live(binary: Arc<backend::Assets>, routing_extension: bool) {
         .timeout(Duration::from_secs(40))
         .build()
         .unwrap();
-    let server = Server::start(binary.clone(), &directory, true);
+    let server = Server::start(binary.clone(), &directory);
     let profile: Value = client
         .get(format!("{}/v3/client_info", server.url))
         .send()
@@ -146,7 +146,7 @@ fn run_live(binary: Arc<backend::Assets>, routing_extension: bool) {
     assert!(first["X-Apple-I-MD-M"] == next["X-Apple-I-MD-M"]);
     assert!(first["X-Mme-Device-Id"] == next["X-Mme-Device-Id"]);
     drop(server);
-    let server = Server::start(binary.clone(), &directory, false);
+    let server = Server::start(binary.clone(), &directory);
     let restored: Value = client.get(&server.url).send().unwrap().json().unwrap();
     assert!(first["X-Apple-I-MD-M"] == restored["X-Apple-I-MD-M"]);
     assert!(first["X-Mme-Device-Id"] == restored["X-Mme-Device-Id"]);

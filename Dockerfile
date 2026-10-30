@@ -35,7 +35,7 @@ RUN curl --disable --fail --location --proto '=https' --proto-redir '=https' \
     && chmod 0644 /assets/CoreADI-26.x86_64
 
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 10001 --create-home anisette \
     && install -d -m 0700 -o anisette -g anisette /data

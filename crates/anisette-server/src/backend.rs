@@ -20,7 +20,7 @@ pub struct V1Worker {
     pub join: thread::JoinHandle<()>,
 }
 impl V1Worker {
-    pub fn start(assets: Arc<Assets>, directory: &Path, initialize: bool) -> Result<Self, String> {
+    pub fn start(assets: Arc<Assets>, directory: &Path) -> Result<Self, String> {
         let store = Store::open(directory, assets.name()).map_err(|e| e.to_string())?;
         let (sender, mut receiver) = tokio::sync::mpsc::channel::<V1Request>(4);
         let (ready, result) = mpsc::sync_channel(1);
@@ -32,10 +32,10 @@ impl V1Worker {
                         Some((id, bytes, headers)) => {
                             (id, Device::restore(&assets, id, &bytes)?, headers)
                         }
-                        None if initialize => {
+                        None => {
                             let mut id = [0; 16];
                             getrandom::fill(&mut id).map_err(|_| "random source failed")?;
-                            let runtime = Device::provision(&assets, id)?;
+                            let runtime = Device::new(&assets, id)?;
                             let headers = HeaderIdentity {
                                 device_id: Identifier::from_bytes(id).uuid(),
                                 local_user_id: provisioning::local_user_id(id),
@@ -43,14 +43,13 @@ impl V1Worker {
                                 client_info: assets.profile().client_info.into(),
                                 user_agent: assets.profile().user_agent.into(),
                             };
-                            store.save(id, &runtime.export_state(id)?, &headers)?;
                             (id, runtime, headers)
                         }
-                        None => return Err(
-                            "no V1 state; use --initialize to explicitly provision a new device"
-                                .into(),
-                        ),
                     };
+                    if !runtime.is_machine_provisioned()? {
+                        runtime.provision(&assets, identifier)?;
+                        store.save(identifier, &runtime.export_state(identifier)?, &headers)?;
+                    }
                     if !runtime.is_machine_provisioned()? || runtime.routing()? == 0 {
                         return Err("saved device is not provisioned or has no routing".into());
                     }
@@ -71,6 +70,10 @@ impl V1Worker {
                         continue;
                     }
                     let result = (|| -> provisioning::Result<_> {
+                        if !runtime.is_machine_provisioned()? {
+                            runtime.provision(&assets, identifier)?;
+                            store.save(identifier, &runtime.export_state(identifier)?, &headers)?;
+                        }
                         let (mid, otp) = runtime.request_otp()?;
                         let routing = runtime.routing()?;
                         if routing == 0 {
@@ -264,24 +267,26 @@ impl Device {
             )?),
         })
     }
-    fn provision(assets: &Assets, id: [u8; 16]) -> provisioning::Result<Self> {
-        let mut device = Self::new(assets, id)?;
+    fn provision(&mut self, assets: &Assets, id: [u8; 16]) -> provisioning::Result<()> {
         let (exchange, spim) = provisioning::Exchange::start(id, assets.profile())?;
-        let (cpim, session) = device.start(&spim)?;
+        let (cpim, session) = self.start(&spim)?;
         let result = (|| -> provisioning::Result<_> {
             let finish = exchange.finish(&cpim)?;
-            device.finish(session, &finish.ptm, &finish.tk)?;
+            self.finish(session, &finish.ptm, &finish.tk)?;
             Ok(finish.routing)
         })();
         let routing = match result {
             Ok(r) => r,
             Err(e) => {
-                let _ = device.cancel(session);
+                let _ = self.cancel(session);
                 return Err(e);
             }
         };
-        device.set_routing(routing)?;
-        Ok(device)
+        self.set_routing(routing)?;
+        if !self.is_machine_provisioned()? || self.routing()? == 0 {
+            return Err("device provisioning did not complete".into());
+        }
+        Ok(())
     }
     fn is_machine_provisioned(&mut self) -> provisioning::Result<bool> {
         Ok(match self {

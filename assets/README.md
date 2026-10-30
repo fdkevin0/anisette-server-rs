@@ -1,6 +1,6 @@
 # Apple binary assets
 
-Apple files are not committed to Git; local copies under `assets/local/` are ignored. Docker builds automatically download the pinned Android APK and Windows iTunes installer, verify and extract them with the Rust importers, and bundle only the required libraries. Service startup never downloads or updates files. All three loaders enforce exact SHA-256 hashes before parsing.
+Apple ADI binaries are not committed to Git; local copies under `assets/local/` are ignored. Docker builds automatically download the pinned Android APK and Windows iTunes installer, verify and extract them with the Rust importers, and bundle only the required libraries. Service startup never downloads or updates files. All three loaders enforce exact SHA-256 hashes before parsing.
 
 The image contains Android libraries in `/assets` and Windows CoreADI at `/assets/CoreADI.dll`. The Docker build also downloads the pinned adid to `/assets/CoreADI-26.x86_64` for selection with `--backend macos`. See [Docker usage](../docs/operations.md#docker); the commands below are for local non-Docker preparation.
 

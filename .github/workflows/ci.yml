@@ -71,10 +71,8 @@ jobs:
           for platform in linux/amd64 linux/arm64; do
             docker run --rm --platform "$platform" --network none anisette-server-rs:test --help
             for backend in android macos windows; do
-              status=0
-              output=$(docker run --rm --platform "$platform" --network none anisette-server-rs:test --backend "$backend" 2>&1) || status=$?
-              test "$status" -eq 1
-              printf '%s\n' "$output" | grep -F 'no V1 state; use --initialize'
+              docker run --rm --platform "$platform" --network none \
+                anisette-server-rs:test --backend "$backend" --check --state-dir /unwritable
             done
           done
       - name: Log in to GHCR

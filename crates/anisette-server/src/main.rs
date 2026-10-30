@@ -33,9 +33,9 @@ struct Args {
     binary: Option<PathBuf>,
     #[arg(long, env = "ANISETTE_STATE_DIR", default_value = "data")]
     state_dir: PathBuf,
-    /// Contact Apple to provision a new V1 device if no saved state exists.
+    /// Verify the backend binary files and exit without network or state access.
     #[arg(long)]
-    initialize: bool,
+    check: bool,
 }
 
 impl Args {
@@ -68,7 +68,11 @@ fn run(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Backend::Android => backend::Assets::Android(adi_android::Libraries::open(path)?),
         Backend::Windows => backend::Assets::Windows(adi_windows::Binary::open(path)?),
     });
-    let worker = backend::V1Worker::start(assets.clone(), &args.state_dir, args.initialize)?;
+    if args.check {
+        println!("{} backend binaries verified", assets.name());
+        return Ok(());
+    }
+    let worker = backend::V1Worker::start(assets.clone(), &args.state_dir)?;
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(2)
         .max_blocking_threads(8)
@@ -158,6 +162,8 @@ mod tests {
         for name in ["android", "macos", "windows"] {
             assert!(Args::try_parse_from(["server", "--backend", name]).is_ok());
         }
+        assert!(Args::try_parse_from(["server", "--check"]).unwrap().check);
+        assert!(!Args::try_parse_from(["server"]).unwrap().check);
         assert!(Args::try_parse_from(["server", "--backend", "fake"]).is_err());
         assert!(Args::try_parse_from(["server", "--listen", "bad-address"]).is_err());
     }
