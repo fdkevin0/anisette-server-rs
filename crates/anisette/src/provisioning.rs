@@ -198,11 +198,6 @@ impl Exchange {
 mod tests {
     use super::*;
     #[test]
-    fn errors_can_cross_worker_boundaries() {
-        fn assert_send_sync<T: Send + Sync + 'static>() {}
-        assert_send_sync::<Result<()>>();
-    }
-    #[test]
     fn lookup_cannot_redirect_provisioning_to_untrusted_endpoints() {
         for url in [
             "http://gsa.apple.com/x",

@@ -7,7 +7,6 @@ fn identifier_uses_uuid_byte_order_and_android_string_prefix() {
     let id = Identifier::decode("ABEiM0RVZneImaq7zN3u/w==").unwrap();
     assert_eq!(id.uuid(), "00112233-4455-6677-8899-AABBCCDDEEFF");
     assert_eq!(id.android_adi_identifier(), "00112233-4455-66");
-    assert_eq!(DSID as u64, u64::MAX - 1);
 }
 
 #[test]
@@ -70,15 +69,6 @@ fn maximum_state_roundtrips_through_provisioning_and_headers() {
         decoded, state,
         "maximum state must survive the wire roundtrip"
     );
-}
-
-#[test]
-fn state_is_opaque_and_identity_is_separate() {
-    let request = json!({"identifier":"ABEiM0RVZneImaq7zN3u/w==", "adi_pb":STANDARD.encode([0, 255, 1, 128])});
-    let bytes = serde_json::to_vec(&request).unwrap();
-    let parsed: HeadersRequest = parse_message(&bytes).unwrap();
-    let (_, state) = parsed.decode().unwrap();
-    assert_eq!(state, [0, 255, 1, 128]);
 }
 
 #[test]

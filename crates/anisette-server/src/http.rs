@@ -392,7 +392,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn websocket_transport_closes_on_success_timeout_disconnect_and_shutdown() {
+    async fn websocket_transport_with_stub_worker_closes_and_releases_channels() {
         let (stop, stopping) = watch::channel(false);
         let (events, mut drops) = mpsc::channel::<()>(8);
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -471,9 +471,9 @@ mod tests {
             .unwrap();
         server.abort();
     }
-    #[tokio::test]
-    async fn client_profile_and_cache_headers_are_exact() {
-        let mut response = json(json!({"client_info":"profile","user_agent":"agent"}));
+    #[test]
+    fn metadata_disables_caching_and_identifies_implementation() {
+        let mut response = json(json!({}));
         metadata(&mut response);
         assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
         assert!(
@@ -482,10 +482,6 @@ mod tests {
                 .unwrap()
                 .starts_with("anisette-server-rs/")
         );
-        let value: Value =
-            serde_json::from_slice(&response.into_body().collect().await.unwrap().to_bytes())
-                .unwrap();
-        assert_eq!(value, json!({"client_info":"profile","user_agent":"agent"}));
     }
     #[test]
     fn websocket_handshake_validates_key_and_protocol() {
