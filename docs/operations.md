@@ -20,8 +20,10 @@ One Linux image bundles all three pinned Apple backends. Android and Windows pac
 CI publishes the Linux AMD64 image to GHCR after successful checks on `main` and version tags:
 
 ```sh
-docker pull ghcr.io/fdkevin0/anisette-server-rs:main
+docker pull ghcr.io/fdkevin0/anisette-server-rs:latest
 ```
+
+`latest` and `main` track successful main builds. Use a version such as `:0.1.0` to pin a release.
 
 Use that image name in the commands below, or build locally:
 
