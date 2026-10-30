@@ -19,9 +19,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install build dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake clang libclang-dev
+        run: sudo apt-get update && sudo apt-get install -y cmake clang libclang-dev ninja-build
       - name: Install pinned toolchain
         run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
       - run: cargo test --workspace --all-targets --all-features --locked
@@ -31,19 +32,22 @@ jobs:
 
   image:
     needs: check
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-docker-action@v5
-        with:
-          daemon-config: |
-            {"features": {"containerd-snapshotter": true}}
-      - uses: docker/setup-qemu-action@v4
-        with:
-          platforms: arm64
       - uses: docker/setup-buildx-action@v4
       - uses: docker/metadata-action@v6
         id: meta
@@ -60,20 +64,18 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platform }}
           load: true
           tags: anisette-server-rs:test
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=image-${{ matrix.arch }}
+          cache-to: type=gha,scope=image-${{ matrix.arch }},mode=max
       - name: Check bundled backends
         run: |
-          for platform in linux/amd64 linux/arm64; do
-            docker run --rm --platform "$platform" --network none anisette-server-rs:test --help
-            for backend in android macos windows; do
-              docker run --rm --platform "$platform" --network none \
-                anisette-server-rs:test --backend "$backend" --check --state-dir /unwritable
-            done
+          docker run --rm --network none anisette-server-rs:test --help
+          for backend in android macos windows; do
+            docker run --rm --network none \
+              anisette-server-rs:test --backend "$backend" --check --state-dir /unwritable
           done
       - name: Log in to GHCR
         if: github.event_name == 'push'
@@ -82,13 +84,62 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish image
+      - name: Push checked image
         if: github.event_name == 'push'
-        uses: docker/build-push-action@v7
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          image="${IMAGE,,}:ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${ARCH}"
+          docker tag anisette-server-rs:test "$image"
+          docker push "$image"
+          mkdir -p /tmp/digests
+          docker image inspect "$image" --format '{{index .RepoDigests 0}}' > "/tmp/digests/$ARCH"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
         with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: image
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/metadata-action@v6
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: latest=false
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish multi-platform image
+        env:
+          META_JSON: ${{ steps.meta.outputs.json }}
+        run: |
+          mapfile -t tags < <(jq -r '.tags[]' <<< "$META_JSON")
+          args=()
+          for tag in "${tags[@]}"; do
+            args+=(--tag "$tag")
+          done
+          amd64=$(cat /tmp/digests/amd64)
+          arm64=$(cat /tmp/digests/arm64)
+          docker buildx imagetools create "${args[@]}" "$amd64" "$arm64"

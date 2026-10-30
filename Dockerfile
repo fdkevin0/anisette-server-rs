@@ -1,5 +1,5 @@
 FROM rust:1.95.0-bookworm AS build
-RUN apt-get update && apt-get install -y --no-install-recommends cmake clang libclang-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends cmake clang libclang-dev ninja-build \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
