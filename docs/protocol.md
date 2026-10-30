@@ -9,6 +9,8 @@ Based on the [pinned Dadoum app.d](https://github.com/Dadoum/anisette-v3-server/
 | POST /v3/get_headers | identifier and adi_pb strings | result=Headers + X-Apple-I-MD, X-Apple-I-MD-M, X-Apple-I-MD-RINFO (all strings) |
 | WS /v3/provisioning_session | Handshake below | Handshake below |
 
+## Provisioning handshake
+
 ```text
 server {"result":"GiveIdentifier"}
 client {"identifier":"<Base64 of 16 bytes>"}
@@ -20,13 +22,19 @@ server {"result":"ProvisioningSuccess","adi_pb":"<Base64>"}
 server closes connection
 ```
 
+## Identifiers and opaque state
+
 identifier uses standard Base64. UUIDs group bytes in their original order, without Windows GUID little-endian field swapping. The Android ADI identifier is the first 16 characters of the uppercase, hyphenated UUID string. DSID is i64 -2; its bit pattern is 18446744073709551614 when the ABI requires u64.
 
 The SideStore client decodes adi_pb and stores its bytes in state.plist, then Base64-encodes them for the next request without parsing the internal format. This supports opaque state transport but does not prove that state is interchangeable across backends. The client's finish message contains only ptm/tk and does not forward the Apple routing header; a successful get_headers response does not update adi_pb either.
 
+## V1 response fields
+
 Exact V1 keys: X-Apple-I-Client-Time, X-Apple-I-MD, X-Apple-I-MD-M, X-Apple-I-MD-RINFO, X-Apple-I-MD-LU, X-Apple-I-SRL-NO, X-MMe-Client-Info, X-Apple-I-TimeZone, X-Apple-Locale, X-Mme-Device-Id. User-Agent is an additional field for clients that use the service-provided HTTP profile.
 
-Errors: get_headers application errors use JSON `result=GetHeadersError` + message; the reference implementation does not set a non-200 status. WS results are InvalidIdentifier, Timeout (without message), StartProvisioningError, and EndProvisioningError (with message), followed by connection closure. The reference waits 3000ms for each client message by default; this is not an ADI execution timeout. Loopback WebSocket tests cover this project's close behavior.
+## Error responses
+
+get_headers application errors use JSON `result=GetHeadersError` + message; the reference implementation does not set a non-200 status. WS results are InvalidIdentifier, Timeout (without message), StartProvisioningError, and EndProvisioningError (with message), followed by connection closure. The reference waits 3000ms for each client message by default; this is not an ADI execution timeout. Loopback WebSocket tests cover this project's close behavior.
 
 ## Validation and resource limits
 

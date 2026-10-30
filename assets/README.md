@@ -1,8 +1,8 @@
 # Apple binary assets
 
-Apple ADI binaries are not committed to Git; local copies under `assets/local/` are ignored. Docker builds automatically download the pinned Android APK and Windows iTunes installer, verify and extract them with the Rust importers, and bundle only the required libraries. Service startup never downloads or updates files. All three loaders enforce exact SHA-256 hashes before parsing.
+Use this guide when running without Docker or inspecting pinned binaries. [Docker images](../docs/operations.md#docker) already bundle all three backends.
 
-The image contains Android libraries in `/assets` and Windows CoreADI at `/assets/CoreADI.dll`. The Docker build also downloads the pinned adid to `/assets/CoreADI-26.x86_64` for selection with `--backend macos`. See [Docker usage](../docs/operations.md#docker); the commands below are for local non-Docker preparation.
+Apple ADI binaries are not committed to Git; local copies under `assets/local/` are ignored. All loaders enforce exact SHA-256 hashes before parsing. Versions and hashes live in the [manifests](manifests/README.md); tested behavior and host coverage live in [compatibility](../docs/compatibility.md).
 
 ## Android
 
@@ -20,11 +20,9 @@ cargo run -p adi-android --example import_apk -- \
 
 The importer requires a new destination. It verifies the entire APK before ZIP parsing, reads only the two fixed ARM64 entries, bounds and verifies their contents, checks ELF parsing, then publishes the temporary directory atomically. A failed download remains an unusable `.part` file; a failed import does not replace installed libraries. Windows directory publication is not supported by this preparation command.
 
-The imported libraries have passed device provisioning, OTP, repeated snapshot restoration and HTTP service tests on macOS arm64. Their CPU architecture is independent of the host: Unicorn executes ARM64 guest code.
-
 ## macOS
 
-The x86_64 adid slice is pinned to macOS 26.7.1 (25G241), SHA-256 `4b6b320f08edcf5d65ed1141399b76a8d9323fee2045c577c5d2f30f35a5dae1`. See [manifest](manifests/macos-26.json). This exact binary has passed real provisioning/OTP and service tests. No other build is accepted.
+The x86_64 adid slice is pinned to macOS 26.7.1 (25G241), SHA-256 `4b6b320f08edcf5d65ed1141399b76a8d9323fee2045c577c5d2f30f35a5dae1`. See [manifest](manifests/macos-26.json). No other build is accepted.
 
 The [backend author links this reference file](https://github.com/malmeloo/Anisette.py/pull/6) on ShareBin. This is a third-party host, not an Apple download endpoint. The download page requires an empty POST; GET returns HTML. The Docker build performs the download and verifies the pinned SHA-256 before including it. For local preparation:
 
@@ -40,11 +38,12 @@ A file extracted from a matching system is also accepted if it has the same hash
 
 ## Windows
 
-The official iTunes 12.13.12.3 installer contains the pinned x86_64 CoreADI 4.17 DLL; see [manifest](manifests/windows-itunes-12.13.12.3.json). Real provisioning, OTP, repeated snapshot restoration and V1/extended-V3 service tests pass on the macOS ARM64 host using Unicorn; Wine is not used. No third-party DLL download site is used. See [sources and provenance](../docs/upstream.md).
+The official iTunes 12.13.12.3 installer contains the pinned x86_64 CoreADI 4.17 DLL; see [manifest](manifests/windows-itunes-12.13.12.3.json). No third-party DLL download site is used. See [sources and provenance](../docs/upstream.md).
 
 Install `7z` as a preparation-only tool. The Rust importer verifies installer size/hash before extraction, copies the verified bytes to a private temporary directory, extracts only the fixed MSI and DLL entries with size/time limits, verifies the MSI and DLL hashes, and atomically creates a new output file. Existing output is never replaced.
 
 ```sh
+mkdir -p assets/local
 curl --fail --location --proto '=https' --proto-redir '=https' \
   --max-time 180 --max-filesize 210000000 \
   --output assets/local/iTunes64Setup.exe.part \
