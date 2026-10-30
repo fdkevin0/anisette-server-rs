@@ -68,6 +68,8 @@ CI runs fmt, Clippy, offline tests, and rustdoc on Linux using `rust-toolchain.t
 
 Pushes to `main` publish `ghcr.io/fdkevin0/anisette-server-rs:main` and `:latest`; version tags such as `v0.1.0` publish `:0.1.0`. `latest` tracks the latest successful main build; version tags do not move it. Each published build also receives a `sha-<short commit>` tag. Images target `linux/amd64` and `linux/arm64`; the existing `0.1.0` release remains AMD64-only. Publishing uses the repository's `GITHUB_TOKEN` with `packages: write`; no personal access token is required. The first package is private by default; change its visibility in GitHub package settings if anonymous pulls are needed.
 
+The Docker build uses cargo-chef 0.1.78 to cache release dependencies independently of source edits. The service and both resource importers compile together so their shared Unicorn dependency uses one feature set. Dependency cooking and the real build use the same Rust version, release profile, working directory, and package selection. Image jobs still wait for `check` to succeed to avoid spending build time on rejected changes.
+
 The Dockerfile and binary loaders enforce the pinned hashes. Container smoke checks do not register devices or verify Apple account authentication. See [operations](operations.md#docker) for runtime configuration.
 
 ## Workspace

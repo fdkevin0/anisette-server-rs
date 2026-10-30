@@ -1,16 +1,28 @@
-FROM rust:1.95.0-bookworm AS build
+FROM rust:1.95.0-bookworm AS chef
 RUN apt-get update && apt-get install -y --no-install-recommends cmake clang libclang-dev ninja-build \
     && rm -rf /var/lib/apt/lists/*
+RUN cargo install cargo-chef --version 0.1.78 --locked
 WORKDIR /src
+
+FROM chef AS planner
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY crates ./crates
-RUN cargo build --locked --release -p anisette-server
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS build
+COPY --from=planner /src/recipe.json recipe.json
+# Cook example dependencies too; cargo-chef has no named-example selector.
+RUN cargo chef cook --locked --release --recipe-path recipe.json \
+    -p anisette-server -p adi-android -p adi-windows --bin anisette-server --examples
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+COPY crates ./crates
+RUN cargo build --locked --release \
+    -p anisette-server -p adi-android -p adi-windows \
+    --bin anisette-server --example import_apk --example import_itunes
 
 FROM build AS assets
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl p7zip-full \
     && rm -rf /var/lib/apt/lists/*
-RUN cargo build --locked --release -p adi-android --example import_apk \
-    && cargo build --locked --release -p adi-windows --example import_itunes
 RUN curl --disable --fail --location --proto '=https' --proto-redir '=https' \
       --connect-timeout 30 --max-time 180 --max-filesize 150000000 \
       --output /tmp/applemusic.apk \
