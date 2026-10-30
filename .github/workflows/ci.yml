@@ -37,6 +37,13 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-docker-action@v5
+        with:
+          daemon-config: |
+            {"features": {"containerd-snapshotter": true}}
+      - uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
       - uses: docker/setup-buildx-action@v4
       - uses: docker/metadata-action@v6
         id: meta
@@ -53,7 +60,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           load: true
           tags: anisette-server-rs:test
           labels: ${{ steps.meta.outputs.labels }}
@@ -61,12 +68,14 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Check bundled backends
         run: |
-          docker run --rm --network none anisette-server-rs:test --help
-          for backend in android macos windows; do
-            status=0
-            output=$(docker run --rm --network none anisette-server-rs:test --backend "$backend" 2>&1) || status=$?
-            test "$status" -eq 1
-            printf '%s\n' "$output" | grep -F 'no V1 state; use --initialize'
+          for platform in linux/amd64 linux/arm64; do
+            docker run --rm --platform "$platform" --network none anisette-server-rs:test --help
+            for backend in android macos windows; do
+              status=0
+              output=$(docker run --rm --platform "$platform" --network none anisette-server-rs:test --backend "$backend" 2>&1) || status=$?
+              test "$status" -eq 1
+              printf '%s\n' "$output" | grep -F 'no V1 state; use --initialize'
+            done
           done
       - name: Log in to GHCR
         if: github.event_name == 'push'
@@ -80,7 +89,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

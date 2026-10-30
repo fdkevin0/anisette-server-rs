@@ -17,19 +17,9 @@ The default listener is loopback. External listening requires an explicit `--lis
 
 One Linux image bundles all three pinned Apple backends. Android and Windows packages come from Apple; macOS adid comes from the [backend author's reference download](https://github.com/malmeloo/Anisette.py/pull/6) on ShareBin. Downloads use HTTPS and fixed SHA-256 verification. A failed download or changed file stops the build. Installers, extraction tools, and compilers stay out of the runtime image.
 
-CI publishes the Linux AMD64 image to GHCR after successful checks on `main` and version tags:
+CI publishes one multi-platform image for `linux/amd64` and `linux/arm64` to GHCR after successful checks on `main` and version tags. Docker automatically selects the matching host architecture.
 
-```sh
-docker pull ghcr.io/fdkevin0/anisette-server-rs:latest
-```
-
-`latest` and `main` track successful main builds. Use a version such as `:0.1.0` to pin a release.
-
-Use that image name in the commands below, or build locally:
-
-```sh
-docker build -t anisette-server-rs:local .
-```
+Run `ghcr.io/fdkevin0/anisette-server-rs:main` directly as shown below; no local build is required. `main` and `latest` track successful main builds. Version tags pin a release; `:0.1.0` was published for Linux AMD64 only.
 
 Select the backend at runtime; no binary mount or `--binary` argument is required:
 
@@ -45,7 +35,7 @@ For example, initialize an independent macOS device:
 docker volume create anisette-macos-data
 docker run --rm --name anisette-macos -p 127.0.0.1:6969:6969 \
   --mount type=volume,src=anisette-macos-data,dst=/data \
-  anisette-server-rs:local --backend macos --initialize
+  ghcr.io/fdkevin0/anisette-server-rs:main --backend macos --initialize
 ```
 
 On subsequent starts, omit `--initialize` and retain the same volume:
@@ -53,7 +43,7 @@ On subsequent starts, omit `--initialize` and retain the same volume:
 ```sh
 docker run --rm --name anisette-macos -p 127.0.0.1:6969:6969 \
   --mount type=volume,src=anisette-macos-data,dst=/data \
-  anisette-server-rs:local --backend macos
+  ghcr.io/fdkevin0/anisette-server-rs:main --backend macos
 ```
 
 Use the same image with `--backend android` or `--backend windows` for the other backends. Each instance selects one backend. Run multiple containers with separate host ports and separate state volumes to serve multiple backends concurrently. Never share a state volume between backends or running instances.
@@ -62,6 +52,12 @@ The image sets `ANISETTE_LISTEN=0.0.0.0:6969` and `ANISETTE_STATE_DIR=/data`, so
 
 The service runs as UID/GID 10001. Bundled files are root-owned and not writable by the service. A new named volume inherits private `/data` permissions; an existing bind mount must belong to UID 10001 with mode 0700. No device identity is created during the build. Initialization explicitly contacts Apple; subsequent starts restore saved state.
 
-Docker reuses cached download layers. Use `docker build --no-cache -t anisette-server-rs:local .` to fetch again. The Apple Music URL is mutable, and the macOS download is third-party hosted; changed content is rejected by its fixed hash. Backend names describe the guest binaries, not the Linux host. Host architecture coverage and the macOS/Windows V3 routing requirement remain as documented in [compatibility](compatibility.md).
+To build a local image instead:
+
+```sh
+docker build -t anisette-server-rs:local .
+```
+
+Use `anisette-server-rs:local` in place of the GHCR image in the run commands. Docker reuses cached download layers. Use `docker build --no-cache -t anisette-server-rs:local .` to fetch again. The Apple Music URL is mutable, and the macOS download is third-party hosted; changed content is rejected by its fixed hash. Backend names describe the guest binaries, not the Linux host. Host architecture coverage and the macOS/Windows V3 routing requirement remain as documented in [compatibility](compatibility.md).
 
 See [development](development.md) for checks and [protocol](protocol.md) for message formats.
