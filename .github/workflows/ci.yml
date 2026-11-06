@@ -17,7 +17,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake clang libclang-dev ninja-build
       - name: Install pinned toolchain
@@ -47,7 +47,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
       - uses: docker/metadata-action@v6
         id: meta
