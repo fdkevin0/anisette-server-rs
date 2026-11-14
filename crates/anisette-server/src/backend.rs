@@ -14,6 +14,9 @@ use std::{
 };
 use tokio::sync::oneshot;
 
+const ANDROID_V3_ROUTING: u64 = 17106176;
+const WINDOWS_V3_ROUTING: u64 = 84215040;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum Backend {
     Android,
@@ -38,6 +41,19 @@ impl Backend {
         }
     }
 
+    /// Routing applied when a standard V3 client finishes provisioning without the
+    /// `X-Apple-I-MD-RINFO` extension. Standard clients (AltStore, SideStore, omnisette)
+    /// only forward `ptm` and `tk`, so without a fallback they cannot use this backend.
+    /// macOS has no verified value and still requires the extension.
+    pub const fn standard_v3_routing(self) -> Option<u64> {
+        match self {
+            Self::Android => Some(ANDROID_V3_ROUTING),
+            // Value Apple returns in `midFinishProvisioning` for Windows CoreADI provisioning.
+            Self::Windows => Some(WINDOWS_V3_ROUTING),
+            Self::Macos => None,
+        }
+    }
+
     pub fn default_binary_path(self) -> &'static Path {
         Path::new(match self {
             Self::Android => "/assets",
@@ -53,9 +69,15 @@ impl Backend {
                 user_agent: adi_macos::provisioning::USER_AGENT,
             },
             // Android uses the Windows HTTP profile; its ADI binary remains Android.
-            Self::Android | Self::Windows => ClientInfo {
+            Self::Android => ClientInfo {
                 client_info: "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
                 user_agent: "akd/1.0 CFNetwork/978.0.7 Darwin/18.7.0",
+            },
+            // Windows CoreADI comes from iTunes; GSA rejects `com.apple.akd` with HTML 403
+            // for this anisette, and Windows CFNetwork omits the `Darwin/...` suffix.
+            Self::Windows => ClientInfo {
+                client_info: adi_windows::CLIENT_INFO,
+                user_agent: adi_windows::USER_AGENT,
             },
         }
     }
@@ -205,8 +227,11 @@ impl V1Worker {
             .name(format!("adi-v1-{}", assets.name()))
             .spawn(move || {
                 let initialized = (|| -> provisioning::Result<_> {
+                    let profile = assets.profile();
                     let (identifier, mut runtime, headers) = match store.load()? {
-                        Some((id, bytes, headers)) => {
+                        Some((id, bytes, mut headers)) => {
+                            headers.client_info = profile.client_info.into();
+                            headers.user_agent = profile.user_agent.into();
                             (id, Device::restore(&assets, id, &bytes)?, headers)
                         }
                         None => {
@@ -217,8 +242,8 @@ impl V1Worker {
                                 device_id: Identifier::from_bytes(id).uuid(),
                                 local_user_id: provisioning::local_user_id(id),
                                 serial: "0".into(),
-                                client_info: assets.profile().client_info.into(),
-                                user_agent: assets.profile().user_agent.into(),
+                                client_info: profile.client_info.into(),
+                                user_agent: profile.user_agent.into(),
                             };
                             (id, runtime, headers)
                         }
@@ -306,8 +331,8 @@ pub fn headers(assets: &Assets, identifier: Identifier, bytes: &[u8]) -> Reply {
     let result = (|| -> provisioning::Result<Value> {
         let mut runtime = Device::restore(assets, identifier.bytes(), bytes)?;
         let routing = runtime.routing()?;
-        let routing = if routing == 0 && matches!(assets, Assets::Android(_)) {
-            ANDROID_V3_ROUTING
+        let routing = if routing == 0 {
+            assets.backend().standard_v3_routing().unwrap_or(0)
         } else {
             routing
         };
@@ -322,6 +347,22 @@ pub fn headers(assets: &Assets, identifier: Identifier, bytes: &[u8]) -> Reply {
         })?)
     })();
     result.map_err(|_| "state restoration or OTP generation failed")
+}
+
+fn resolve_finish_routing(
+    client_routing: Option<u64>,
+    native_routing: u64,
+    backend: Backend,
+) -> Result<u64, &'static str> {
+    let routing = match client_routing {
+        Some(r) => r,
+        None if native_routing != 0 => native_routing,
+        None => backend.standard_v3_routing().unwrap_or(0),
+    };
+    if routing == 0 {
+        return Err("this backend requires Apple routing extension");
+    }
+    Ok(routing)
 }
 
 #[derive(Debug)]
@@ -356,15 +397,8 @@ impl ProvisioningContext for Context {
         self.runtime.finish(session, ptm, tk)?;
         self.pending = None;
         // Native completion may populate routing; inspect it only after consuming the handle.
-        let routing = match routing {
-            Some(r) => r,
-            // Standard V3 omits Apple routing; preserve Dadoum's Android fallback when unset.
-            None if matches!(self.runtime, Device::Android(_)) => ANDROID_V3_ROUTING,
-            None => self.runtime.routing()?,
-        };
-        if routing == 0 {
-            return Err("this backend requires Apple routing extension".into());
-        }
+        let routing =
+            resolve_finish_routing(routing, self.runtime.routing()?, self.runtime.backend())?;
         self.runtime.set_routing(routing)?;
         self.runtime.export_state(self.identifier)
     }
@@ -379,8 +413,6 @@ impl Drop for Context {
         self.cancel();
     }
 }
-
-const ANDROID_V3_ROUTING: u64 = 17106176;
 
 #[derive(Debug)]
 pub enum Assets {
@@ -410,6 +442,13 @@ enum Device {
     Windows(adi_windows::Runtime),
 }
 impl Device {
+    const fn backend(&self) -> Backend {
+        match self {
+            Self::Macos(_) => Backend::Macos,
+            Self::Android(_) => Backend::Android,
+            Self::Windows(_) => Backend::Windows,
+        }
+    }
     fn new(assets: &Assets, id: [u8; 16]) -> provisioning::Result<Self> {
         Ok(match assets {
             Assets::Windows(b) => {
@@ -528,8 +567,24 @@ impl Device {
 mod tests {
     use super::{
         Assets, Backend, Context, Device, Identifier, Path, ProvisioningContext, provisioning,
-        v1_state_dir,
+        resolve_finish_routing, v1_state_dir,
     };
+
+    #[test]
+    fn finish_routing_prefers_client_then_native_then_backend_fallback() {
+        assert_eq!(resolve_finish_routing(Some(99), 42, Backend::Macos), Ok(99));
+        assert!(resolve_finish_routing(Some(0), 42, Backend::Windows).is_err());
+        assert_eq!(resolve_finish_routing(None, 42, Backend::Windows), Ok(42));
+        assert_eq!(
+            resolve_finish_routing(None, 0, Backend::Android),
+            Ok(17106176)
+        );
+        assert_eq!(
+            resolve_finish_routing(None, 0, Backend::Windows),
+            Ok(84215040)
+        );
+        assert!(resolve_finish_routing(None, 0, Backend::Macos).is_err());
+    }
 
     #[test]
     fn v1_state_dir_preserves_root_for_default_and_isolates_other_backends() {
@@ -556,28 +611,24 @@ mod tests {
         );
     }
     #[test]
-    #[ignore = "requires macOS/Windows binaries, Apple network and permitted Unicorn JIT"]
+    #[ignore = "requires ANISETTE_MACOS_BINARY, Apple network and permitted Unicorn JIT"]
     fn live_missing_routing_checks_completed_native_state() {
         let mac = std::env::var_os("ANISETTE_MACOS_BINARY").unwrap();
-        let win = std::env::var_os("ANISETTE_WINDOWS_BINARY").unwrap();
-        for assets in [
-            Assets::Macos(adi_macos::Binary::open(Path::new(&mac)).unwrap()),
-            Assets::Windows(adi_windows::Binary::open(Path::new(&win)).unwrap()),
-        ] {
-            let mut id = [0; 16];
-            getrandom::fill(&mut id).unwrap();
-            let mut context = Context::new(&assets, Identifier::from_bytes(id)).unwrap();
-            let (exchange, spim) = provisioning::Exchange::start(id, assets.profile()).unwrap();
-            let cpim = context.start(&spim).unwrap();
-            let finish = exchange.finish(&cpim).unwrap();
-            assert!(context.finish(&finish.ptm, &finish.tk, None).is_err());
-            assert!(context.pending.is_none());
-            assert!(context.runtime.is_machine_provisioned().unwrap());
-            assert_eq!(context.runtime.routing().unwrap(), 0);
-            context.cancel();
-            context.runtime.set_routing(finish.routing).unwrap();
-            assert!(!context.runtime.request_otp().unwrap().1.is_empty());
-        }
+        // macOS has no verified fallback and still requires the extension.
+        let assets = Assets::Macos(adi_macos::Binary::open(Path::new(&mac)).unwrap());
+        let mut id = [0; 16];
+        getrandom::fill(&mut id).unwrap();
+        let mut context = Context::new(&assets, Identifier::from_bytes(id)).unwrap();
+        let (exchange, spim) = provisioning::Exchange::start(id, assets.profile()).unwrap();
+        let cpim = context.start(&spim).unwrap();
+        let finish = exchange.finish(&cpim).unwrap();
+        assert!(context.finish(&finish.ptm, &finish.tk, None).is_err());
+        assert!(context.pending.is_none());
+        assert!(context.runtime.is_machine_provisioned().unwrap());
+        assert_eq!(context.runtime.routing().unwrap(), 0);
+        context.cancel();
+        context.runtime.set_routing(finish.routing).unwrap();
+        assert!(!context.runtime.request_otp().unwrap().1.is_empty());
     }
     #[test]
     #[ignore = "requires all three ANISETTE binary paths, Apple network and permitted Unicorn JIT"]
