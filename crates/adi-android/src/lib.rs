@@ -15,6 +15,9 @@ pub const FILES: [(&str, &str); 2] = [
         "9d5b557cf3faf88c34c394ab2cd7fc1a3b4acf3aed51f28cd0bc093858107c22",
     ),
 ];
+pub const CLIENT_INFO: &str =
+    "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.akd/1.0)>";
+pub const USER_AGENT: &str = "akd/1.0 CFNetwork/978.0.7 Darwin/18.7.0";
 const MAX_BINARY: u64 = 32 * 1024 * 1024;
 #[derive(Debug)]
 #[non_exhaustive]
