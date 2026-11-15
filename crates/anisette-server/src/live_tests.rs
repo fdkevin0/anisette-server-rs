@@ -91,7 +91,7 @@ fn live_http_restart_v3_restore_and_extended_provisioning() {
     let binary = Arc::new(backend::Assets::Macos(
         adi_macos::Binary::open(std::path::Path::new(&path)).unwrap(),
     ));
-    run_live(binary, |finish| {
+    run_live(&binary, |finish| {
         (
             json!({
                 "ptm": STANDARD.encode(&finish.ptm),
@@ -103,6 +103,17 @@ fn live_http_restart_v3_restore_and_extended_provisioning() {
     });
 }
 
+fn standard_v3_end(finish: &FinishData, fallback_routing: u64) -> (Value, u64) {
+    assert_ne!(finish.routing, 0);
+    (
+        json!({
+            "ptm": STANDARD.encode(&finish.ptm),
+            "tk": STANDARD.encode(&finish.tk),
+        }),
+        fallback_routing,
+    )
+}
+
 #[test]
 #[ignore = "requires ANISETTE_ANDROID_LIBS, Apple network and permitted Unicorn JIT"]
 fn live_android_http_restart_and_standard_v3() {
@@ -110,16 +121,7 @@ fn live_android_http_restart_and_standard_v3() {
     let assets = Arc::new(backend::Assets::Android(
         adi_android::Libraries::open(std::path::Path::new(&path)).unwrap(),
     ));
-    run_live(assets, |finish| {
-        assert_eq!(finish.routing, 17106176, "Apple's Android routing changed");
-        (
-            json!({
-                "ptm": STANDARD.encode(&finish.ptm),
-                "tk": STANDARD.encode(&finish.tk),
-            }),
-            17106176,
-        )
-    });
+    run_live(&assets, |finish| standard_v3_end(finish, 17_106_176));
 }
 
 #[test]
@@ -129,19 +131,10 @@ fn live_windows_http_restart_and_standard_v3() {
     let assets = Arc::new(backend::Assets::Windows(
         adi_windows::Binary::open(std::path::Path::new(&path)).unwrap(),
     ));
-    run_live(assets, |finish| {
-        assert_eq!(finish.routing, 84215040, "Apple's Windows routing changed");
-        (
-            json!({
-                "ptm": STANDARD.encode(&finish.ptm),
-                "tk": STANDARD.encode(&finish.tk),
-            }),
-            84215040,
-        )
-    });
+    run_live(&assets, |finish| standard_v3_end(finish, 84_215_040));
 }
 
-fn run_live(binary: Arc<backend::Assets>, build_end: impl FnOnce(&FinishData) -> (Value, u64)) {
+fn run_live(binary: &Arc<backend::Assets>, build_end: impl FnOnce(&FinishData) -> (Value, u64)) {
     let root = tempfile::tempdir().unwrap();
     let directory = root.path().join("device");
     let client = Client::builder()
@@ -185,6 +178,11 @@ fn run_live(binary: Arc<backend::Assets>, build_end: impl FnOnce(&FinishData) ->
     assert_eq!(restored["User-Agent"], binary.profile().user_agent);
 
     let record: Value = serde_json::from_slice(&std::fs::read(&identity_path).unwrap()).unwrap();
+    assert_eq!(
+        record["headers"]["client_info"],
+        binary.profile().client_info
+    );
+    assert_eq!(record["headers"]["user_agent"], binary.profile().user_agent);
     let identifier: [u8; 16] = serde_json::from_value(record["identifier"].clone()).unwrap();
     let request = json!({"identifier":STANDARD.encode(identifier),"adi_pb":record["adi_pb"]});
     for _ in 0..2 {

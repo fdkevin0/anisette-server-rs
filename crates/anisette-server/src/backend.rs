@@ -14,8 +14,11 @@ use std::{
 };
 use tokio::sync::oneshot;
 
-const ANDROID_V3_ROUTING: u64 = 17106176;
-const WINDOWS_V3_ROUTING: u64 = 84215040;
+/// Verified static V3 routing fallbacks (`17106176` / `0x0105_0500` and `84215040` / `0x0505_0500`).
+/// Apple's live `midFinishProvisioning` varies across shards (e.g. `50660608`, `84215040`), which
+/// standard V3 clients omit when forwarding only `ptm` and `tk`.
+const ANDROID_V3_ROUTING: u64 = 17_106_176;
+const WINDOWS_V3_ROUTING: u64 = 84_215_040;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum Backend {
@@ -48,7 +51,6 @@ impl Backend {
     pub const fn standard_v3_routing(self) -> Option<u64> {
         match self {
             Self::Android => Some(ANDROID_V3_ROUTING),
-            // Value Apple returns in `midFinishProvisioning` for Windows CoreADI provisioning.
             Self::Windows => Some(WINDOWS_V3_ROUTING),
             Self::Macos => None,
         }
@@ -68,10 +70,10 @@ impl Backend {
                 client_info: adi_macos::provisioning::CLIENT_INFO,
                 user_agent: adi_macos::provisioning::USER_AGENT,
             },
-            // Android uses the Windows HTTP profile; its ADI binary remains Android.
+            // Android uses the Windows akd HTTP profile; its ADI binary remains Android.
             Self::Android => ClientInfo {
-                client_info: "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-                user_agent: "akd/1.0 CFNetwork/978.0.7 Darwin/18.7.0",
+                client_info: adi_android::CLIENT_INFO,
+                user_agent: adi_android::USER_AGENT,
             },
             // Windows CoreADI comes from iTunes; GSA rejects `com.apple.akd` with HTML 403
             // for this anisette, and Windows CFNetwork omits the `Darwin/...` suffix.
@@ -330,15 +332,7 @@ impl V1Worker {
 pub fn headers(assets: &Assets, identifier: Identifier, bytes: &[u8]) -> Reply {
     let result = (|| -> provisioning::Result<Value> {
         let mut runtime = Device::restore(assets, identifier.bytes(), bytes)?;
-        let routing = runtime.routing()?;
-        let routing = if routing == 0 {
-            assets.backend().standard_v3_routing().unwrap_or(0)
-        } else {
-            routing
-        };
-        if routing == 0 {
-            return Err("missing routing".into());
-        }
+        let routing = resolve_routing(None, runtime.routing()?, assets.backend())?;
         let (mid, otp) = runtime.request_otp()?;
         Ok(serde_json::to_value(ServerMessage::Headers {
             otp: &STANDARD.encode(otp),
@@ -349,7 +343,7 @@ pub fn headers(assets: &Assets, identifier: Identifier, bytes: &[u8]) -> Reply {
     result.map_err(|_| "state restoration or OTP generation failed")
 }
 
-fn resolve_finish_routing(
+fn resolve_routing(
     client_routing: Option<u64>,
     native_routing: u64,
     backend: Backend,
@@ -397,8 +391,7 @@ impl ProvisioningContext for Context {
         self.runtime.finish(session, ptm, tk)?;
         self.pending = None;
         // Native completion may populate routing; inspect it only after consuming the handle.
-        let routing =
-            resolve_finish_routing(routing, self.runtime.routing()?, self.runtime.backend())?;
+        let routing = resolve_routing(routing, self.runtime.routing()?, self.runtime.backend())?;
         self.runtime.set_routing(routing)?;
         self.runtime.export_state(self.identifier)
     }
@@ -567,23 +560,17 @@ impl Device {
 mod tests {
     use super::{
         Assets, Backend, Context, Device, Identifier, Path, ProvisioningContext, provisioning,
-        resolve_finish_routing, v1_state_dir,
+        resolve_routing, v1_state_dir,
     };
 
     #[test]
     fn finish_routing_prefers_client_then_native_then_backend_fallback() {
-        assert_eq!(resolve_finish_routing(Some(99), 42, Backend::Macos), Ok(99));
-        assert!(resolve_finish_routing(Some(0), 42, Backend::Windows).is_err());
-        assert_eq!(resolve_finish_routing(None, 42, Backend::Windows), Ok(42));
-        assert_eq!(
-            resolve_finish_routing(None, 0, Backend::Android),
-            Ok(17106176)
-        );
-        assert_eq!(
-            resolve_finish_routing(None, 0, Backend::Windows),
-            Ok(84215040)
-        );
-        assert!(resolve_finish_routing(None, 0, Backend::Macos).is_err());
+        assert_eq!(resolve_routing(Some(99), 42, Backend::Macos), Ok(99));
+        assert!(resolve_routing(Some(0), 42, Backend::Windows).is_err());
+        assert_eq!(resolve_routing(None, 42, Backend::Windows), Ok(42));
+        assert_eq!(resolve_routing(None, 0, Backend::Android), Ok(17_106_176));
+        assert_eq!(resolve_routing(None, 0, Backend::Windows), Ok(84_215_040));
+        assert!(resolve_routing(None, 0, Backend::Macos).is_err());
     }
 
     #[test]

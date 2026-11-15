@@ -1,4 +1,4 @@
-//! Pinned Windows CoreADI x64 PE execution on Unicorn.
+//! Pinned Windows `CoreADI` x64 PE execution on Unicorn.
 mod filesystem;
 mod pe;
 mod runtime;
