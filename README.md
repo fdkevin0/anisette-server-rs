@@ -66,6 +66,7 @@ All four endpoints accept an optional `?backend=android|macos|windows` query par
 | Preparing Apple ADI binaries for non-Docker local builds | [Asset preparation](assets/README.md) |
 | Building, offline test suite, and live backend verification | [Development and validation](docs/development.md) |
 | Upstream references and license inventory | [Provenance](docs/upstream.md), [Third-party notices](THIRD_PARTY_NOTICES.md), [Dependency licenses](docs/licenses.md) |
+| Contributing, code of conduct, and security policy | [Contributing](CONTRIBUTING.md), [Code of conduct](CODE_OF_CONDUCT.md), [Security policy](SECURITY.md) |
 
 ## Acknowledgements
 

@@ -8,6 +8,7 @@ version = "0.2.0"
 edition = "2024"
 rust-version = "1.95"
 license = "GPL-2.0-only"
+repository = "https://github.com/fdkevin0/anisette-server-rs"
 publish = false
 
 [workspace.dependencies]

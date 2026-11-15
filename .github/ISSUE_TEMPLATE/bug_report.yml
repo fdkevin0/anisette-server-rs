@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible server, backend, or client-compatibility issue.
+body:
+  - type: markdown
+    attributes:
+      value: "Never paste Apple ID credentials, proprietary Apple binaries, `identity.json` or `adi.pb`/`adi_pb` blobs, or live `X-Apple-I-MD*` headers. Report security vulnerabilities through the Security tab."
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      description: Which ADI backend was active?
+      options:
+        - android
+        - macos
+        - windows
+        - multiple / not backend-specific
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Container image tag/digest or binary version/commit, host OS and architecture, and client (e.g., AltStore, SideStore, ipatool).
+      placeholder: "ghcr.io/fdkevin0/anisette-server-rs:latest (linux/amd64), SideStore 0.6.x"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include CLI flags, query parameters, and exact endpoints involved.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Include HTTP status codes, V3 WebSocket responses, or GrandSlam error codes if known.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Optional. Redact device IDs, machine IDs, tokens, and `X-Apple-I-MD*` values before submitting.
