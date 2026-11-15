@@ -8,15 +8,15 @@ The table was generated from `cargo metadata --locked --filter-platform TARGET -
 
 Container base packages retain their own package licenses and are outside this Cargo table. Curl is used only by the image build to download assets. Apple binaries remain proprietary; bundling them grants no redistribution rights. Source provenance and retained notices are recorded in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-Cargo.lock SHA-256: `0ba4c8fb5c0a23b12c1dda362b136a8f61a8c90b2b4c405db028667b575091f1`.
+Cargo.lock SHA-256: `62bf862a3085c366c6a887ccd7cf42cc5a2e8b7d6e99d6575c33b8fe645c96f1`.
 
 | Package | Version | Declared SPDX | Normal dependency targets |
 | --- | --- | --- | --- |
-| adi-android | 0.1.2 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| adi-macos | 0.1.2 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| adi-windows | 0.1.2 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| anisette | 0.1.2 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| anisette-server | 0.1.2 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| adi-android | 0.2.1 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| adi-macos | 0.2.1 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| adi-windows | 0.2.1 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| anisette | 0.2.1 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| anisette-server | 0.2.1 | GPL-2.0-only | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | anstream | 1.0.0 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | anstyle | 1.0.14 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | anstyle-parse | 1.0.0 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
@@ -36,7 +36,7 @@ Cargo.lock SHA-256: `0ba4c8fb5c0a23b12c1dda362b136a8f61a8c90b2b4c405db028667b575
 | clap_derive | 4.6.7 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | clap_lex | 1.1.1 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | colorchoice | 1.0.5 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| const-oid | 0.10.2 | Apache-2.0 OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| const-oid | 0.10.3 | Apache-2.0 OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | core-foundation | 0.10.1 | MIT OR Apache-2.0 | macOS ARM64 |
 | core-foundation-sys | 0.8.7 | MIT OR Apache-2.0 | macOS ARM64 |
 | cpufeatures | 0.3.1 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
@@ -46,7 +46,7 @@ Cargo.lock SHA-256: `0ba4c8fb5c0a23b12c1dda362b136a8f61a8c90b2b4c405db028667b575
 | digest | 0.11.3 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | displaydoc | 0.2.7 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | equivalent | 1.0.3 | Apache-2.0 OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| errno | 0.3.14 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64 |
+| errno | 0.3.15 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64 |
 | fastrand | 2.5.0 | Apache-2.0 OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | form_urlencoded | 1.2.2 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | futures-channel | 0.3.34 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
@@ -82,14 +82,14 @@ Cargo.lock SHA-256: `0ba4c8fb5c0a23b12c1dda362b136a8f61a8c90b2b4c405db028667b575
 | indexmap | 2.14.2 | Apache-2.0 OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | ipnet | 2.12.2 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | is_terminal_polyfill | 1.70.2 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| itoa | 1.0.18 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| itoa | 1.0.19 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | libc | 0.2.191 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | linux-raw-sys | 0.12.1 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | Linux AMD64, Linux ARM64 |
 | litemap | 0.8.3 | Unicode-3.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | log | 0.4.35 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | lru-slab | 0.1.3 | MIT OR Apache-2.0 OR Zlib | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | memchr | 2.8.3 | Unlicense OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| mio | 1.2.4 | MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| mio | 1.2.5 | MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | num-conv | 0.2.2 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | once_cell | 1.21.4 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | once_cell_polyfill | 1.70.2 | MIT OR Apache-2.0 | Windows x64 |
@@ -106,7 +106,7 @@ Cargo.lock SHA-256: `0ba4c8fb5c0a23b12c1dda362b136a8f61a8c90b2b4c405db028667b575
 | quinn-proto | 0.11.19 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | quinn-udp | 0.5.16 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | quote | 1.0.47 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| rand | 0.10.3 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| rand | 0.10.4 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | rand_core | 0.10.1 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | rand_pcg | 0.10.2 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | reqwest | 0.13.5 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
@@ -115,9 +115,9 @@ Cargo.lock SHA-256: `0ba4c8fb5c0a23b12c1dda362b136a8f61a8c90b2b4c405db028667b575
 | rustix | 1.1.6 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | Linux AMD64, Linux ARM64, macOS ARM64 |
 | rustls | 0.23.46 | Apache-2.0 OR ISC OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | rustls-native-certs | 0.8.5 | Apache-2.0 OR ISC OR MIT | Linux AMD64, Linux ARM64 |
-| rustls-pki-types | 1.15.1 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| rustls-pki-types | 1.16.0 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | rustls-platform-verifier | 0.7.1 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| rustls-webpki | 0.103.16 | ISC | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| rustls-webpki | 0.103.17 | ISC | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | scroll | 0.13.0 | MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | scroll_derive | 0.13.2 | MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | security-framework | 3.7.0 | MIT OR Apache-2.0 | macOS ARM64 |
@@ -130,12 +130,13 @@ Cargo.lock SHA-256: `0ba4c8fb5c0a23b12c1dda362b136a8f61a8c90b2b4c405db028667b575
 | sha2 | 0.11.1 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | signal-hook-registry | 1.4.8 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64 |
 | slab | 0.4.12 | MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| smallvec | 1.16.4 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| smallvec | 1.16.5 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | socket2 | 0.6.5 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | stable_deref_trait | 1.2.1 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | strsim | 0.11.1 | MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | subtle | 2.6.1 | BSD-3-Clause | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
-| syn | 3.0.9 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| syn | 2.0.119 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| syn | 3.0.10 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | sync_wrapper | 1.0.2 | Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | synstructure | 0.14.0 | MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | tempfile | 3.27.0 | MIT OR Apache-2.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
@@ -176,6 +177,7 @@ Cargo.lock SHA-256: `0ba4c8fb5c0a23b12c1dda362b136a8f61a8c90b2b4c405db028667b575
 | zerofrom | 0.1.8 | Unicode-3.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | zerofrom-derive | 0.1.8 | Unicode-3.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | zeroize | 1.9.1 | Apache-2.0 OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
+| zeroize_derive | 1.5.0 | Apache-2.0 OR MIT | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | zerotrie | 0.2.5 | Unicode-3.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | zerovec | 0.11.9 | Unicode-3.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |
 | zerovec-derive | 0.11.7 | Unicode-3.0 | Linux AMD64, Linux ARM64, macOS ARM64, Windows x64 |

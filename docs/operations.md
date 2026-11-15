@@ -17,7 +17,7 @@ Use `--backend android`, `--backend macos`, or `--backend windows` to set the de
 
 ## Running locally
 
-Rust 1.99.1 is pinned via `rust-toolchain.toml`. Install CMake, Ninja (`ninja-build`), a C/C++ compiler, and `libclang`, then [prepare the Apple binaries](../assets/README.md).
+Rust 1.100.0 is pinned via `rust-toolchain.toml`. Install CMake, Ninja (`ninja-build`), a C/C++ compiler, and `libclang`, then [prepare the Apple binaries](../assets/README.md).
 
 Ensure the parent directory of `--state-dir` exists before starting the server (for `--state-dir ./data`, `.` already exists):
 
