@@ -18,5 +18,5 @@ unicorn-engine = { workspace = true, features = ["arch_aarch64"] }
 getrandom.workspace = true
 
 [dev-dependencies]
-zip = { version = "9.4.1", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+zip = { version = "9.6", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 tempfile.workspace = true
