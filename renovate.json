@@ -5,5 +5,55 @@
   ],
   "ignorePaths": [
     ".agents/**"
+  ],
+  "minimumReleaseAge": "3 days",
+  "platformAutomerge": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "schedule": [
+      "before 6am on monday"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Group and automerge non-major Rust crate updates weekly",
+      "matchManagers": [
+        "cargo"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "rust non-major dependencies",
+      "schedule": [
+        "before 6am on monday"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Group and automerge non-major GitHub Actions updates weekly",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "github-actions non-major",
+      "schedule": [
+        "before 6am on monday"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Require manual review for major updates, Dockerfile, and Rust toolchain",
+      "matchManagers": [
+        "dockerfile",
+        "rust-toolchain"
+      ],
+      "automerge": false
+    }
   ]
 }
